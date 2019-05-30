@@ -38,7 +38,7 @@ model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 if use_dropout:
-    model.add(Dropout(rate0.25))
+    model.add(Dropout(rate=1-0.25))
 
 model.add(Conv2D(64, (3, 3), padding='same'))
 model.add(Activation('relu'))

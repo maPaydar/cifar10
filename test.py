@@ -7,6 +7,7 @@ from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 import os
 import sys
+import matplotlib.pyplot as plt
 
 mode = sys.argv[1]
 
@@ -66,7 +67,7 @@ opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
-              
+
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
 x_train /= 255
@@ -75,6 +76,35 @@ x_test /= 255
 # Load wights
 print("Start loading weights from: ", os.path.join(save_dir, model_name))
 model.load_weights(os.path.join(save_dir, model_name))
+
+for layer in model.layers:
+    # check for convolutional layer
+    if 'conv' not in layer.name:
+        continue
+    # get filter weights
+    filters, biases = layer.get_weights()
+    print(layer.name, filters.shape)
+
+filters, biases = model.layers[2].get_weights()
+# normalize filter values to 0-1 so we can visualize them
+f_min, f_max = filters.min(), filters.max()
+filters = (filters - f_min) / (f_max - f_min)
+# plot first few filters
+n_filters, ix = 12, 1
+for i in range(n_filters):
+    # get the filter
+    f = filters[:, :, :, i]
+    # plot each channel separately
+    for j in range(3):
+        # specify subplot and turn of axis
+        ax = plt.subplot(n_filters, 3, ix)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        # plot filter channel in grayscale
+        plt.imshow(f[:, :, j], cmap='gray')
+        ix += 1
+# show the figure
+plt.savefig(os.path.join(save_dir, model_name + '_filters.svg'))
 
 # Score trained model.
 scores = model.evaluate(x_test, y_test, verbose=1)
